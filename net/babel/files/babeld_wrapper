@@ -57,8 +57,6 @@ for p in /sys/class/net/*
 do
     i=$(basename $p)
     case $i in
-    br-*|lo|tunl0|eth*|br0.2|br0.3)
-        ;;
     wlan*)
         radio=$(echo ${i} | sed s/wlan/radio/)
         case "$(uci -q -c /etc/config.mesh get setup.globals.${radio}_mode)" in
@@ -69,6 +67,9 @@ do
                 echo "interface ${i} type wireless enable-timestamps true rxcost $(uci -q get babel.wireless.rxcost) split-horizon false" >> ${C}
                 ;;
         esac
+        ;;
+    br-wifi)
+        echo "interface ${i} type wireless enable-timestamps true rxcost $(uci -q get babel.wireless.rxcost) split-horizon false" >> ${C}
         ;;
     wg*)
         cost=$(uci -q get network.${i}.cost)
@@ -83,6 +84,8 @@ do
         fi
         echo " rtt-min $(uci -q get babel.tunnel.rtt_min) rtt-max $(uci -q get babel.tunnel.rtt_max) max-rtt-penalty $(uci -q get babel.tunnel.max_rtt_penalty)" >> ${C}
         echo "redistribute anyproto if ${i} deny" >> ${C}
+        ;;
+    br-*|lo|tunl0|eth*|br0.2|br0.3)
         ;;
     br0.*)
         xlink=$(uci -q show network | sed -n "s/network\.\(xlink.*\)\.ifname='${i}'/\1/p")
